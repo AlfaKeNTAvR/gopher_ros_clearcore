@@ -3,24 +3,29 @@
 
 import rospy
 from std_msgs.msg import String
+from gopher_ros_clearcore.srv import *
+from gopher_ros_clearcore.msg import *
 import geometry_msgs.msg 
 import serial
 import json
 
-def logger():
+import serial.tools.list_ports
+
+def logger(msg):
     position_pub = rospy.Publisher('chest_position', geometry_msgs.msg.Point, queue_size=10)
     velocity_pub = rospy.Publisher('chest_velocity', geometry_msgs.msg.Twist, queue_size=10)
     brake_pub = rospy.Publisher('brake_status', String, queue_size=10)
     motor_pub = rospy.Publisher('motor_status', String, queue_size=10)
     end_stop = rospy.Publisher('limits_status', String, queue_size=10)
     
-    rospy.init_node('logger', anonymous=True)
+    # unity_srv = rospy.Service('unity_print', homing_handler)
+
+    rospy.init_node('chest_logger', anonymous=True)
     rate = rospy.Rate(10) # 10hz
 
-    # Connects to clearCore via Serial Communication
-    clearCore = serial.Serial('/dev/ttyACM0', 115200,timeout=.1)
+
     while not rospy.is_shutdown():
-        data = clearCore.readline().decode("utf-8").strip()
+        data = msg.data
 
         if len(data) > 0:
             # Serialze String to Json
@@ -43,8 +48,10 @@ def logger():
 
         rate.sleep()
 
+
 if __name__ == '__main__':
     try:
-        logger()
+        logger_subscriber = rospy.Subscriber("logged_info",String,logger)
+        
     except rospy.ROSInterruptException:
         pass

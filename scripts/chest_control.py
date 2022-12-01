@@ -1,25 +1,21 @@
 #!/usr/bin/env python
 
 import rospy
-import serial
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 from gopher_ros_clearcore.srv import *
 
 
-def serial_setup(com_port, baudrate=115200, timeout=0.1):
-    global clearCoreSerial
-    clearCoreSerial = serial.Serial(port=com_port, baudrate=115200, timeout=0.1)
-
-
-def serial_write(message):
-    clearCoreSerial.write(message.encode())
+def serial_write(command):
+    # TODO: Call a serial write service
+    serial_write_srv(command)
 
 
 # Topic callback functions
-# Stop
+# Stop the motion
 def stop_callback(req):
-    stop_chest()
+    command = "vm_0.0_"   
+    serial_write(command)
 
 
 # Velocity movement
@@ -96,6 +92,26 @@ def debug_control_handler(req):
     return response
 
 
+# Logger mode
+def logger_control_handler(req):
+    command = ""
+
+    # Enable
+    if req.command == True:
+        command = "logger_on_1000_"
+
+    # Disable
+    elif req.command == False:
+        command = "logger_off_"
+    
+    serial_write(command)
+
+    # Service response
+    response = req.command
+
+    return response
+
+
 # Homing
 def homing_handler(req):
     command = ""
@@ -138,29 +154,9 @@ def relpos_handler(req):
     return response
 
 
-# Helper functions
-# Send 0 velocity command
-def stop_chest():
-    command = "vm_0.0_"   
-    serial_write(command)
-    print("\nChest motion stopped.")
-
-
-# When the node shuts down
-def on_shut_down():
-    # Safety 1: stop the movement
-    stop_chest()
-
-    print("\nShutting down...")
-
-
-
 if __name__ == "__main__":
     # Variables
     last_vel = 0.0
-
-    # Setup serial connection
-    serial_setup("/dev/ttyACM0")
 
     # Initialize a node
     rospy.init_node("z_chest_control", anonymous=True)
@@ -173,16 +169,18 @@ if __name__ == "__main__":
     drive_control_srv = rospy.Service('z_chest_drive', DriveControl, drive_control_handler)
     brake_control_srv = rospy.Service('z_chest_brake', BrakeControl, brake_control_handler)
     debug_control_srv = rospy.Service('z_chest_debug', DebugControl, debug_control_handler)
+    logger_control_srv = rospy.Service('z_chest_logger', LoggerControl, logger_control_handler)
     homing_srv = rospy.Service('z_chest_home', Homing, homing_handler)
     abspos_srv = rospy.Service('z_chest_abspos', AbsolutePosition, abspos_handler)
     relpos_srv = rospy.Service('z_chest_relpos', RelativePosition, relpos_handler)
 
+    # Add services
+    serial_write_srv = rospy.ServiceProxy('serial_write', SerialWrite)
+
     print("Gopher Chest control is ready.")
 
-    while True:
-        # If the node is shutdown
-        if rospy.is_shutdown():
-            on_shut_down()
-            break
+    while not rospy.is_shutdown():
+        pass
 
+    print("\nShutting down...")
 
