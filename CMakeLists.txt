@@ -57,6 +57,7 @@ add_message_files(
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
+  Stop.srv
   AbsolutePosition.srv
   BrakeControl.srv
   DebugControl.srv

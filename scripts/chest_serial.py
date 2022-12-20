@@ -31,7 +31,12 @@ class GopherSerial:
 
     # Write to the serial port
     def serial_write(self, req):
-         self.serialPort.write(req.command.encode())
+        self.serialPort.write(req.command.encode())
+
+        # TODO: Service response
+        response = True
+
+        return response
 
 
     # Read from the serial port
@@ -50,6 +55,8 @@ class GopherSerial:
 if __name__ == '__main__':
     rospy.init_node('chest_serial')
     serial = GopherSerial()   
+
+    print("Serial connection is setup.")
     
     while not rospy.is_shutdown():
         serial.serial_read()

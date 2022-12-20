@@ -12,26 +12,31 @@ def serial_write(command):
 
 
 # Topic callback functions
-# Stop the motion
-def stop_callback(req):
-    command = "vm_0.0_"   
-    serial_write(command)
-
-
 # Velocity movement
-def vel_callback(req):
+def vel_callback(msg):
     global last_vel
     command = ""
-    vel = req.linear.z
+    vel = msg.linear.z
 
     # Send only when velocity value changes
     if abs(last_vel - vel) > 0.01:
         last_vel = vel
         command = "vm_" + str(vel) + "_"   
         serial_write(command)
-    
 
 # Service handlers
+# TODO: Add service responses
+# Stop the motion
+def stop_handler(req):
+    command = "vm_0.0_"   
+    serial_write(command)
+
+    # Service response
+    response = req.command
+
+    return response
+
+
 # Drive
 def drive_control_handler(req):
     command = ""
@@ -162,10 +167,10 @@ if __name__ == "__main__":
     rospy.init_node("z_chest_control", anonymous=True)
 
     # Subscribe to topics
-    rospy.Subscriber('z_chest_stop', Bool, stop_callback)
     rospy.Subscriber('z_chest_vel', Twist, vel_callback)
 
     # Initialize services
+    chest_stop_srv = rospy.Service('z_chest_stop', Stop, stop_handler)
     drive_control_srv = rospy.Service('z_chest_drive', DriveControl, drive_control_handler)
     brake_control_srv = rospy.Service('z_chest_brake', BrakeControl, brake_control_handler)
     debug_control_srv = rospy.Service('z_chest_debug', DebugControl, debug_control_handler)
