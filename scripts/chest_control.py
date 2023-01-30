@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
+from gopher_ros_clearcore.msg import *
 from gopher_ros_clearcore.srv import *
 
 
@@ -23,6 +24,21 @@ def vel_callback(msg):
         last_vel = vel
         command = "vm_" + str(vel) + "_"   
         serial_write(command)
+
+
+# Absolute position movement
+def pos_callback(msg):
+    global last_pos
+    command = ""
+    pos = msg.position
+    vel = msg.velocity
+
+    # Send only when velocity value changes
+    if abs(last_pos - pos) > 0.1:
+        last_pos = pos
+        command = "am_" + str(pos) + "_" + str(vel) + "_"
+        serial_write(command)
+
 
 # Service handlers
 # TODO: Add service responses
@@ -162,12 +178,14 @@ def relpos_handler(req):
 if __name__ == "__main__":
     # Variables
     last_vel = 0.0
+    last_pos = 440.0
 
     # Initialize a node
     rospy.init_node("z_chest_control", anonymous=True)
 
     # Subscribe to topics
     rospy.Subscriber('z_chest_vel', Twist, vel_callback)
+    rospy.Subscriber('z_chest_pos', Position, pos_callback)
 
     # Initialize services
     chest_stop_srv = rospy.Service('z_chest_stop', Stop, stop_handler)
