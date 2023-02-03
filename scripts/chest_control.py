@@ -200,7 +200,7 @@ if __name__ == "__main__":
     # Add services
     serial_write_srv = rospy.ServiceProxy('serial_write', SerialWrite)
 
-    print("Gopher Chest control is ready.")
+    print("Chest control is ready.")
 
     while not rospy.is_shutdown():
         pass

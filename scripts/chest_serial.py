@@ -11,7 +11,6 @@ class GopherSerial:
     def __init__(self):
         self.logger_pub = rospy.Publisher("logged_info", String, queue_size=1)
         self.serial_write_src = rospy.Service('serial_write', SerialWrite, self.serial_write)
-        self.service_unity_print = rospy.ServiceProxy("/unity_print",UnityPrint)
         self.serialPort = None
         self.serial_setup()
     
@@ -43,10 +42,8 @@ class GopherSerial:
     # Read from the serial port
     def serial_read(self):
         data = self.serialPort.readline().decode("utf-8").strip()
-    
-        
+       
         if len(data) > 0:
-            self.service_unity_print(1,data)
             self.logger_pub.publish(data)
 
 
@@ -57,6 +54,7 @@ class GopherSerial:
         
         
 if __name__ == '__main__':
+    # Initialize the node
     rospy.init_node('chest_serial')
     serial = GopherSerial()   
 
