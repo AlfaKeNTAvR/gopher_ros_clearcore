@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import time
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 from gopher_ros_clearcore.msg import *
@@ -19,8 +20,13 @@ def vel_callback(msg):
     command = ""
     vel = msg.linear.z
 
-    # Send only when velocity value changes
-    if abs(last_vel - vel) > 0.01:
+    curr_time["velocity"] = time.perf_counter()
+
+    # Rate 10 Hz
+    if curr_time["velocity"] - prev_time["velocity"] > 0.1 and abs(vel - last_vel) > 0.01:
+        # Update previoud time
+        prev_time["velocity"] = curr_time["velocity"]
+
         last_vel = vel
         command = "vm_" + str(vel) + "_"   
         serial_write(command)
@@ -33,8 +39,13 @@ def pos_callback(msg):
     pos = msg.position
     vel = msg.velocity
 
-    # Send only when velocity value changes
-    if abs(last_pos - pos) > 0.1:
+    curr_time["position"] = time.perf_counter()
+
+    # Rate 10 Hz
+    if curr_time["position"] - prev_time["position"] > 0.1: # and abs(pos - last_pos) > 0.01:
+        # Update previoud time
+        prev_time["position"] = curr_time["position"]
+
         last_pos = pos
         command = "am_" + str(pos) + "_" + str(vel) + "_"
         serial_write(command)
@@ -185,6 +196,8 @@ if __name__ == "__main__":
     # Variables
     last_vel = 0.0
     last_pos = 440.0
+    curr_time = {"velocity": time.perf_counter(), "position": time.perf_counter()}
+    prev_time = {"velocity": time.perf_counter(), "position": time.perf_counter()}
 
     # Initialize a node
     rospy.init_node("z_chest_control", anonymous=True)
