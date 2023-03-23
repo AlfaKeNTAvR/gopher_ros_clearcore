@@ -52,21 +52,24 @@ class GopherSerial:
             self.logger_pub.publish(data)
 
 
-    # Actions when the node dies
-    def on_shutdown(self):
-        self.serial_write("vm_0.0_")
-        print("Shutting down the serial connection...")
+# This function is called when the node is shutting down
+def node_shutdown():
+    # Deactivate logger
+    serial.serial_write("logger_off_")
+
+    # Stop chest motion
+    serial.serial_write("vm_0.0_")
+    print("Shutting down the serial connection...")
         
         
 if __name__ == '__main__':
     # Initialize the node
     rospy.init_node('chest_serial')
-    serial = GopherSerial()   
+    rospy.on_shutdown(node_shutdown)
+    
+    serial = GopherSerial() 
 
     print("Serial connection is setup.")
     
     while not rospy.is_shutdown():
         serial.serial_read()
-
-    # Stop the chest motion
-    serial.on_shutdown()
