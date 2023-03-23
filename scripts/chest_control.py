@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import time
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 from gopher_ros_clearcore.msg import *
@@ -19,8 +20,13 @@ def vel_callback(msg):
     command = ""
     vel = msg.linear.z
 
-    # Send only when velocity value changes
-    if abs(last_vel - vel) > 0.01:
+    curr_time["velocity"] = time.perf_counter()
+
+    # Rate 10 Hz
+    if curr_time["velocity"] - prev_time["velocity"] > 0.1 and abs(vel - last_vel) > 0.01:
+        # Update previoud time
+        prev_time["velocity"] = curr_time["velocity"]
+
         last_vel = vel
         command = "vm_" + str(vel) + "_"   
         serial_write(command)
@@ -33,8 +39,13 @@ def pos_callback(msg):
     pos = msg.position
     vel = msg.velocity
 
-    # Send only when velocity value changes
-    if abs(last_pos - pos) > 0.1:
+    curr_time["position"] = time.perf_counter()
+
+    # Rate 10 Hz
+    if curr_time["position"] - prev_time["position"] > 0.1: # and abs(pos - last_pos) > 0.01:
+        # Update previoud time
+        prev_time["position"] = curr_time["position"]
+
         last_pos = pos
         command = "am_" + str(pos) + "_" + str(vel) + "_"
         serial_write(command)
@@ -119,7 +130,7 @@ def logger_control_handler(req):
 
     # Enable
     if req.command == True:
-        command = "logger_on_1000_"
+        command = "logger_on_100_"
 
     # Disable
     elif req.command == False:
@@ -175,13 +186,22 @@ def relpos_handler(req):
     return response
 
 
+# This function is called when the node is shutting down
+def node_shutdown():
+    # Deactivate logger
+    logger_control_srv(False)
+
+
 if __name__ == "__main__":
     # Variables
     last_vel = 0.0
     last_pos = 440.0
+    curr_time = {"velocity": time.perf_counter(), "position": time.perf_counter()}
+    prev_time = {"velocity": time.perf_counter(), "position": time.perf_counter()}
 
     # Initialize a node
     rospy.init_node("z_chest_control", anonymous=True)
+    rospy.on_shutdown(node_shutdown)
 
     # Subscribe to topics
     rospy.Subscriber('z_chest_vel', Twist, vel_callback)
@@ -199,6 +219,7 @@ if __name__ == "__main__":
 
     # Add services
     serial_write_srv = rospy.ServiceProxy('serial_write', SerialWrite)
+    logger_srv = rospy.ServiceProxy('z_chest_logger', LoggerControl)
 
     print("Chest control is ready.")
 
