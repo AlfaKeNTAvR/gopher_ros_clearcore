@@ -47,6 +47,9 @@ if __name__ == '__main__':
     # Subscribing
     logger_subscriber = rospy.Subscriber("logged_info", String, logger_callback)
 
+    # Service
+    logger_control_srv = rospy.ServiceProxy('z_chest_logger', LoggerControl)
+
     print("Logger is ready.")
 
     while not rospy.is_shutdown():

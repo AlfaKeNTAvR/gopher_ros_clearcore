@@ -175,6 +175,12 @@ def relpos_handler(req):
     return response
 
 
+# This function is called when the node is shutting down
+def node_shutdown():
+    # Deactivate logger
+    logger_control_srv(False)
+
+
 if __name__ == "__main__":
     # Variables
     last_vel = 0.0
@@ -182,6 +188,7 @@ if __name__ == "__main__":
 
     # Initialize a node
     rospy.init_node("z_chest_control", anonymous=True)
+    rospy.on_shutdown(node_shutdown)
 
     # Subscribe to topics
     rospy.Subscriber('z_chest_vel', Twist, vel_callback)
@@ -199,6 +206,7 @@ if __name__ == "__main__":
 
     # Add services
     serial_write_srv = rospy.ServiceProxy('serial_write', SerialWrite)
+    logger_srv = rospy.ServiceProxy('z_chest_logger', LoggerControl)
 
     print("Chest control is ready.")
 
