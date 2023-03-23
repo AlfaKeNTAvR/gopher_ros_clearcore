@@ -119,7 +119,7 @@ def logger_control_handler(req):
 
     # Enable
     if req.command == True:
-        command = "logger_on_1000_"
+        command = "logger_on_100_"
 
     # Disable
     elif req.command == False:

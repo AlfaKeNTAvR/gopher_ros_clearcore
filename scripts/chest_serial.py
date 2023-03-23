@@ -46,10 +46,18 @@ class GopherSerial:
 
     # Read from the serial port
     def serial_read(self):
-        data = self.serialPort.readline().decode("utf-8").strip()
+        data = self.serialPort.readline().decode()
        
+        # If any serial data available
         if len(data) > 0:
-            self.logger_pub.publish(data)
+            
+            data = data.split("_")
+
+            command = data[0]
+
+            # Publish logger data
+            if command == "logger":
+                self.logger_pub.publish(data[1])
 
 
 # This function is called when the node is shutting down
