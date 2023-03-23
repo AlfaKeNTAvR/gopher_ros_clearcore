@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>=
+
+    <node pkg="gopher_ros_clearcore" type="chest_serial.py" name="chest_serial" output="screen"/>
+    <node pkg="gopher_ros_clearcore" type="chest_control.py" name="chest_control" output="screen"/>
+    <node pkg="gopher_ros_clearcore" type="chest_logger.py" name="chest_logger" output="screen"/>
+
+</launch>
