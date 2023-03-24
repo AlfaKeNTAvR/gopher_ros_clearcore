@@ -1,61 +1,58 @@
 #!/usr/bin/env python
+# TODO: Rewrite the code as a Class.
 
 import rospy
 import time
+
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
-from gopher_ros_clearcore.msg import *
-from gopher_ros_clearcore.srv import *
+
+import gopher_ros_clearcore.msg as ros_clearcore_msg
+import gopher_ros_clearcore.srv as ros_clearcore_srv
 
 
 def serial_write(command):
-    # TODO: Call a serial write service
     serial_write_srv(command)
 
 
 # Topic callback functions
-# Velocity movement
-def vel_callback(msg):
-    global last_vel
-    command = ""
-    vel = msg.linear.z
+def velocity_callback(msg):  # Velocity movement
+    global last_velocity
+    command = ''
+    # TODO: Shift from using Twist message, to a float32.
+    velocity = msg.linear.z
 
-    curr_time["velocity"] = time.perf_counter()
+    current_time['velocity'] = time.perf_counter()
 
-    # Rate 10 Hz
-    if curr_time["velocity"] - prev_time["velocity"] > 0.1 and abs(vel - last_vel) > 0.01:
-        # Update previoud time
-        prev_time["velocity"] = curr_time["velocity"]
+    # Sent target velocity at 10 Hz rate.
+    if (
+        current_time['velocity'] - previous_time['velocity'] > 0.1 and
+        abs(velocity - last_velocity) > 0.01
+    ):
+        previous_time['velocity'] = current_time['velocity']
+        last_velocity = velocity
 
-        last_vel = vel
-        command = "vm_" + str(vel) + "_"   
+        command = f'vm_{velocity}_'
         serial_write(command)
 
 
-# Absolute position movement
-def pos_callback(msg):
-    global last_pos
-    command = ""
-    pos = msg.position
-    vel = msg.velocity
+def pos_callback(msg):  # Absolute position movement
+    command = ''
 
-    curr_time["position"] = time.perf_counter()
+    current_time['position'] = time.perf_counter()
 
     # Rate 10 Hz
-    if curr_time["position"] - prev_time["position"] > 0.1: # and abs(pos - last_pos) > 0.01:
-        # Update previoud time
-        prev_time["position"] = curr_time["position"]
+    if current_time['position'] - previous_time['position'] > 0.1:
+        previous_time['position'] = current_time['position']
 
-        last_pos = pos
-        command = "am_" + str(pos) + "_" + str(vel) + "_"
+        command = f'am_{msg.position}_{msg.velocity}_'
         serial_write(command)
 
 
 # Service handlers
-# TODO: Add service responses
-# Stop the motion
+# TODO: Add proper service responses based on messages from CLearCore.
 def stop_handler(req):
-    command = "vm_0.0_"   
+    command = 'vm_0.0_'  # Send 0 velocity to stop any motion.
     serial_write(command)
 
     # Service response
@@ -64,37 +61,14 @@ def stop_handler(req):
     return response
 
 
-# Drive
-def drive_control_handler(req):
-    command = ""
+def drive_control_handler(req):  # Drive motor control
+    command = ''
 
-    # Enable
-    if req.command == True:
-        command = "ed_"
+    if req.command:
+        command = 'ed_'  # Enable
 
-    # Disable
-    elif req.command == False:
-        command = "dd_"
-
-    serial_write(command)
-    
-    # Service response
-    response = req.command
-
-    return response
-
-
-# Brake
-def brake_control_handler(req):
-    command = ""
-
-    # Enable
-    if req.command == True:
-        command = "eb_"
-
-    # Disable
-    elif req.command == False:
-        command = "db_"
+    elif not req.command:
+        command = 'dd_'  # Disable
 
     serial_write(command)
 
@@ -104,18 +78,15 @@ def brake_control_handler(req):
     return response
 
 
-# Debug mode
-def debug_control_handler(req):
-    command = ""
+def brake_control_handler(req):  # Brake control
+    command = ''
 
-    # Enable
-    if req.command == True:
-        command = "debug_on_"
+    if req.command:
+        command = 'eb_'  # Enable
 
-    # Disable
-    elif req.command == False:
-        command = "debug_off_"
-    
+    elif not req.command:
+        command = 'db_'  # Disable
+
     serial_write(command)
 
     # Service response
@@ -124,18 +95,15 @@ def debug_control_handler(req):
     return response
 
 
-# Logger mode
-def logger_control_handler(req):
-    command = ""
+def debug_control_handler(req):  # Debug mode control
+    command = ''
 
-    # Enable
-    if req.command == True:
-        command = "logger_on_100_"
+    if req.command:
+        command = 'debug_on_'
 
-    # Disable
-    elif req.command == False:
-        command = "logger_off_"
-    
+    elif not req.command:
+        command = 'debug_off_'
+
     serial_write(command)
 
     # Service response
@@ -144,27 +112,40 @@ def logger_control_handler(req):
     return response
 
 
-# Homing
-def homing_handler(req):
-    command = ""
+def logger_control_handler(req):  # Logger mode control
+    command = ''
+
+    if req.command:
+        command = 'logger_on_100_'  # Run logger at 10 Hz.
+
+    elif not req.command:
+        command = 'logger_off_'
+
+    serial_write(command)
+
+    # Service response
+    response = req.command
+
+    return response
+
+
+def homing_handler(req):  # Homing
+    command = ''
 
     # Start homing
-    if req.command == True:
-        command = "hm_"
+    if req.command:
+        command = 'hm_'
 
     serial_write(command)
-    
+
     # Service response
     response = req.command
 
     return response
 
 
-# Relative position movement
-def abspos_handler(req):
-    pos = req.position
-    vel = req.velocity
-    command = "am_" + str(pos) + "_" + str(vel) + "_"     
+def abspos_handler(req):  # Relative position movement
+    command = f'am_{req.position}_{req.velocity}_'
     serial_write(command)
 
     # Service response
@@ -173,11 +154,8 @@ def abspos_handler(req):
     return response
 
 
-# Relative position movement
-def relpos_handler(req):
-    pos = req.position
-    vel = req.velocity
-    command = "rm_" + str(pos) + "_" + str(vel) + "_"      
+def relpos_handler(req):  # Relative position movement
+    command = f'rm_{req.position}_{req.velocity}_'
     serial_write(command)
 
     # Service response
@@ -186,45 +164,94 @@ def relpos_handler(req):
     return response
 
 
-# This function is called when the node is shutting down
+# Is called when the node is shutting down.
 def node_shutdown():
-    # Deactivate logger
-    logger_control_srv(False)
+    logger_control_srv(False)  # Deactivate the logger.
+
+    print('\nShutting down...')
 
 
-if __name__ == "__main__":
-    # Variables
-    last_vel = 0.0
-    last_pos = 440.0
-    curr_time = {"velocity": time.perf_counter(), "position": time.perf_counter()}
-    prev_time = {"velocity": time.perf_counter(), "position": time.perf_counter()}
-
+if __name__ == '__main__':
     # Initialize a node
-    rospy.init_node("z_chest_control", anonymous=True)
+    rospy.init_node('z_chest_control', anonymous=True)
     rospy.on_shutdown(node_shutdown)
 
-    # Subscribe to topics
-    rospy.Subscriber('z_chest_vel', Twist, vel_callback)
-    rospy.Subscriber('z_chest_pos', Position, pos_callback)
+    # Variables
+    last_velocity = 0.0
+    current_time = {
+        'velocity': time.perf_counter(),
+        'position': time.perf_counter(),
+    }
+    previous_time = {
+        'velocity': time.perf_counter(),
+        'position': time.perf_counter(),
+    }
 
-    # Initialize services
-    chest_stop_srv = rospy.Service('z_chest_stop', Stop, stop_handler)
-    drive_control_srv = rospy.Service('z_chest_drive', DriveControl, drive_control_handler)
-    brake_control_srv = rospy.Service('z_chest_brake', BrakeControl, brake_control_handler)
-    debug_control_srv = rospy.Service('z_chest_debug', DebugControl, debug_control_handler)
-    logger_control_srv = rospy.Service('z_chest_logger', LoggerControl, logger_control_handler)
-    homing_srv = rospy.Service('z_chest_home', Homing, homing_handler)
-    abspos_srv = rospy.Service('z_chest_abspos', AbsolutePosition, abspos_handler)
-    relpos_srv = rospy.Service('z_chest_relpos', RelativePosition, relpos_handler)
+    # Topic subscriber
+    rospy.Subscriber(
+        'z_chest_vel',
+        Twist,
+        velocity_callback,
+    )
+    rospy.Subscriber(
+        'z_chest_pos',
+        ros_clearcore_msg.Position,
+        pos_callback,
+    )
 
-    # Add services
-    serial_write_srv = rospy.ServiceProxy('serial_write', SerialWrite)
-    logger_srv = rospy.ServiceProxy('z_chest_logger', LoggerControl)
+    # Service provider
+    chest_stop_srv = rospy.Service(
+        'z_chest_stop',
+        ros_clearcore_srv.Stop,
+        stop_handler,
+    )
+    drive_control_srv = rospy.Service(
+        'z_chest_drive',
+        ros_clearcore_srv.DriveControl,
+        drive_control_handler,
+    )
+    brake_control_srv = rospy.Service(
+        'z_chest_brake',
+        ros_clearcore_srv.BrakeControl,
+        brake_control_handler,
+    )
+    debug_control_srv = rospy.Service(
+        'z_chest_debug',
+        ros_clearcore_srv.DebugControl,
+        debug_control_handler,
+    )
+    logger_control_srv = rospy.Service(
+        'z_chest_logger',
+        ros_clearcore_srv.LoggerControl,
+        logger_control_handler,
+    )
+    homing_srv = rospy.Service(
+        'z_chest_home',
+        ros_clearcore_srv.Homing,
+        homing_handler,
+    )
+    abspos_srv = rospy.Service(
+        'z_chest_abspos',
+        ros_clearcore_srv.AbsolutePosition,
+        abspos_handler,
+    )
+    relpos_srv = rospy.Service(
+        'z_chest_relpos',
+        ros_clearcore_srv.RelativePosition,
+        relpos_handler,
+    )
 
-    print("Chest control is ready.")
+    # Service subscriber
+    serial_write_srv = rospy.ServiceProxy(
+        'serial_write',
+        ros_clearcore_srv.SerialWrite,
+    )
+    logger_srv = rospy.ServiceProxy(
+        'z_chest_logger',
+        ros_clearcore_srv.LoggerControl,
+    )
+
+    print('Chest control is ready.')
 
     while not rospy.is_shutdown():
         pass
-
-    print("\nShutting down...")
-
