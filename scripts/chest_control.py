@@ -5,7 +5,6 @@ import rospy
 import time
 
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Bool
 
 import gopher_ros_clearcore.msg as ros_clearcore_msg
 import gopher_ros_clearcore.srv as ros_clearcore_srv
@@ -200,42 +199,42 @@ if __name__ == '__main__':
     )
 
     # Service provider
-    chest_stop_srv = rospy.Service(
+    rospy.Service(
         'z_chest_stop',
         ros_clearcore_srv.Stop,
         stop_handler,
     )
-    drive_control_srv = rospy.Service(
+    rospy.Service(
         'z_chest_drive',
         ros_clearcore_srv.DriveControl,
         drive_control_handler,
     )
-    brake_control_srv = rospy.Service(
+    rospy.Service(
         'z_chest_brake',
         ros_clearcore_srv.BrakeControl,
         brake_control_handler,
     )
-    debug_control_srv = rospy.Service(
+    rospy.Service(
         'z_chest_debug',
         ros_clearcore_srv.DebugControl,
         debug_control_handler,
     )
-    logger_control_srv = rospy.Service(
+    rospy.Service(
         'z_chest_logger',
         ros_clearcore_srv.LoggerControl,
         logger_control_handler,
     )
-    homing_srv = rospy.Service(
+    rospy.Service(
         'z_chest_home',
         ros_clearcore_srv.Homing,
         homing_handler,
     )
-    abspos_srv = rospy.Service(
+    rospy.Service(
         'z_chest_abspos',
         ros_clearcore_srv.AbsolutePosition,
         abspos_handler,
     )
-    relpos_srv = rospy.Service(
+    rospy.Service(
         'z_chest_relpos',
         ros_clearcore_srv.RelativePosition,
         relpos_handler,
@@ -246,7 +245,7 @@ if __name__ == '__main__':
         'serial_write',
         ros_clearcore_srv.SerialWrite,
     )
-    logger_srv = rospy.ServiceProxy(
+    logger_control_srv = rospy.ServiceProxy(
         'z_chest_logger',
         ros_clearcore_srv.LoggerControl,
     )
