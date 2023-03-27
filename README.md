@@ -1,6 +1,6 @@
 # gopher_ros_clearcore
 
-This package provides control of a robot chest component using ROS. It initializes `chest_control`, `chest_serial`, and `chest_logger` ROS nodes and sets up various ROS subscribers and service providers for controlling the chest. It communicates with a Teknic ClearCore board over a serial interface to control the chest motion.
+This package provides control of a robot chest component using ROS. It initializes `chest_control`, `chest_serial`, and `chest_logger` ROS nodes and sets up various ROS topics and service providers for controlling the chest. It communicates with a Teknic ClearCore board over a serial interface to control the chest motion.
 
 ## Dependencies
 
@@ -122,7 +122,7 @@ velocity: 0.5"
 
 ## Examples of subscribing to the chest feedback
 
-This part provides instructions on how to get feedback from the chest of a robot using the chest logger ROS node. The code subscribes to the `logged_info` ROS topic, which provides the chest component's status information. The information is deserialized and published to various ROS topics.
+This part provides instructions on how to get feedback from the chest of a robot using the `chest_logger` ROS node. The code subscribes to the `logged_info` ROS topic, which provides the chest component's status information. The information is deserialized and published to various ROS topics.
 
 To subscribe and echo the `chest_position` topic:
 
