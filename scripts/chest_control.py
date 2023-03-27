@@ -61,7 +61,7 @@ def velocity_callback(msg):
         serial_write_srv(serial_command)
 
 
-def pos_callback(msg):
+def position_callback(msg):
     """Callback function for the 'z_chest_pos' topic.
 
     Sends the target position and velocity of the chest component to the
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     rospy.Subscriber(
         'z_chest_pos',
         ros_clearcore_msg.Position,
-        pos_callback,
+        position_callback,
     )
 
     # Service provider
@@ -353,12 +353,12 @@ if __name__ == '__main__':
     rospy.Service(
         'z_chest_abspos',
         ros_clearcore_srv.AbsolutePosition,
-        abspos_handler,
+        absolute_position_handler,
     )
     rospy.Service(
         'z_chest_relpos',
         ros_clearcore_srv.RelativePosition,
-        relpos_handler,
+        relative_position_handler,
     )
 
     # Service subscriber
