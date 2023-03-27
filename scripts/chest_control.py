@@ -1,5 +1,26 @@
 #!/usr/bin/env python
 # TODO: Rewrite the code as a Class.
+"""Controls a robot chest component.
+
+Initializes a ROS node 'z_chest_control' and sets up various ROS subscribers and
+service providers for controlling a robot chest component. It receives velocity
+and position messages from ROS topics 'z_chest_vel' and 'z_chest_pos',
+respectively, and uses the messages to control the chest.
+
+Also provides various ROS services for controlling the chest, including:
+
+'z_chest_stop' to stop the chest. 
+'z_chest_drive' to control the chest drive.
+'z_chest_brake' to control the chest brake. 
+'z_chest_debug' to enable/disable debug mode. 
+'z_chest_logger' to enable/disable logger mode. 
+'z_chest_home' to start homing. 
+'z_chest_abspos' to move the chest to an absolute position.
+'z_chest_relpos' to move the chest to a relative position.
+
+Author(s):
+    1. Nikita Boguslavskii (bognik3@gmail.com)
+"""
 
 import rospy
 import time
@@ -10,8 +31,17 @@ import gopher_ros_clearcore.msg as ros_clearcore_msg
 import gopher_ros_clearcore.srv as ros_clearcore_srv
 
 
-# Topic callback functions
-def velocity_callback(msg):  # Velocity movement
+def velocity_callback(msg):
+    """Callback function for the 'z_chest_vel' topic.
+
+    Sends the target velocity of the chest component to the ClearCore board over
+    serial communication.
+
+    Args:
+        msg (geometry_msgs.msg.Twist): The message received on the 'z_chest_vel'
+        topic.
+    """
+
     global last_velocity
     serial_command = ''
     # TODO: Shift from using Twist message, to a float32.
@@ -19,7 +49,7 @@ def velocity_callback(msg):  # Velocity movement
 
     current_time['velocity'] = time.perf_counter()
 
-    # Sent target velocity at 10 Hz rate.
+    # Send target velocity at 10 Hz rate.
     if (
         current_time['velocity'] - previous_time['velocity'] > 0.1 and
         abs(velocity - last_velocity) > 0.01
@@ -31,7 +61,17 @@ def velocity_callback(msg):  # Velocity movement
         serial_write_srv(serial_command)
 
 
-def pos_callback(msg):  # Absolute position movement
+def pos_callback(msg):
+    """Callback function for the 'z_chest_pos' topic.
+
+    Sends the target position and velocity of the chest component to the
+    ClearCore board to control the chest movement.
+
+    Args:
+        msg (gopher_ros_clearcore.msg.Position): The message received on the
+        'z_chest_pos' topic.
+    """
+
     serial_command = ''
 
     current_time['position'] = time.perf_counter()
@@ -44,9 +84,19 @@ def pos_callback(msg):  # Absolute position movement
         serial_write_srv(serial_command)
 
 
-# Service handlers
-# TODO: Add proper service responses based on messages from ClearCore.
+# Service handlers TODO: Add proper service responses based on messages from
+# ClearCore.
 def stop_handler(req):
+    """Handler for the 'z_chest_stop' service.
+
+    Sends a serial command to the ClearCore board to stop the motion of the
+    chest component.
+
+    Args:
+        req (gopher_ros_clearcore.srv.Stop): The request received on the
+        'z_chest_stop' service.
+    """
+
     serial_command = 'vm_0.0_'  # Send 0 velocity to stop any motion.
     serial_write_srv(serial_command)
 
@@ -56,7 +106,17 @@ def stop_handler(req):
     return response
 
 
-def drive_control_handler(req):  # Drive motor control
+def drive_control_handler(req):
+    """Handler for the 'z_chest_drive' service.
+
+    Sends a serial command to the ClearCore board to enable or disable the drive
+    motor of the chest component.
+
+    Args:
+        req (gopher_ros_clearcore.srv.DriveControl): The request received on
+        'z_chest_drive' service.
+    """
+
     serial_command = ''
 
     if req.command:
@@ -73,7 +133,17 @@ def drive_control_handler(req):  # Drive motor control
     return response
 
 
-def brake_control_handler(req):  # Brake control
+def brake_control_handler(req):
+    """Handler for the 'z_chest_brake' service.
+    
+    Sends a serial command to the ClearCore board to enable or disable the brake
+    of the chest component.
+
+    Args:
+        req (gopher_ros_clearcore.srv.BrakeControl): The request received on
+        'z_chest_brake' service.
+    """
+
     serial_command = ''
 
     if req.command:
@@ -90,7 +160,17 @@ def brake_control_handler(req):  # Brake control
     return response
 
 
-def debug_control_handler(req):  # Debug mode control
+def debug_control_handler(req):
+    """Handler for the 'z_chest_debug' service.
+
+    Sends a serial command to the ClearCore board to enable or disable the debug
+    mode of the chest component.
+
+    Args:
+        req (gopher_ros_clearcore.srv.DebugControl): The request received on
+        'z_chest_debug' service.
+    """
+
     serial_command = ''
 
     if req.command:
@@ -107,7 +187,17 @@ def debug_control_handler(req):  # Debug mode control
     return response
 
 
-def logger_control_handler(req):  # Logger mode control
+def logger_control_handler(req):
+    """Handler for the 'z_chest_logger' service.
+
+    Sends a serial command to the ClearCore board to enable or disable the
+    logger mode of the chest component.
+
+    Args:
+        req (gopher_ros_clearcore.srv.LoggerControl): The request received on
+        'z_chest_logger' service.
+    """
+
     serial_command = ''
 
     if req.command:
@@ -124,7 +214,17 @@ def logger_control_handler(req):  # Logger mode control
     return response
 
 
-def homing_handler(req):  # Homing
+def homing_handler(req):
+    """Handler for the 'z_chest_home' service.
+
+    Sends a serial command to the ClearCore board to initiate the homing process
+    of the chest component.
+
+    Args:
+        req (gopher_ros_clearcore.srv.Homing): The request received on
+        'z_chest_home' service.
+    """
+
     serial_command = ''
 
     # Start homing
@@ -139,7 +239,18 @@ def homing_handler(req):  # Homing
     return response
 
 
-def abspos_handler(req):  # Relative position movement
+def absolute_position_handler(req):
+    """Handles the 'z_chest_abspos' service request.
+
+    Sends a serial command to the ClearCore board to move the chest component.
+    to an absolute position with the specified speed fraction.
+
+    Args:
+        req (gopher_ros_clearcore.srv.AbsolutePosition): The request received on
+        'z_chest_abspos' service. Contains the target position and speed
+        fraction.
+    """
+
     serial_command = f'am_{req.position}_{req.velocity}_'
     serial_write_srv(serial_command)
 
@@ -149,7 +260,19 @@ def abspos_handler(req):  # Relative position movement
     return response
 
 
-def relpos_handler(req):  # Relative position movement
+def relative_position_handler(req):
+    """Handles the 'z_chest_relpos' service request.
+
+    Sends a serial command to the ClearCore board to move the chest component.
+    to a position relative to the current position with the specified speed
+    fraction.
+
+    Args:
+        req (gopher_ros_clearcore.srv.RelativePosition): The request received on
+        'z_chest_relpos' service. Contains the relative position and speed
+        fraction.
+    """
+
     serial_command = f'rm_{req.position}_{req.velocity}_'
     serial_write_srv(serial_command)
 
@@ -159,9 +282,11 @@ def relpos_handler(req):  # Relative position movement
     return response
 
 
-# Is called when the node is shutting down.
 def node_shutdown():
-    logger_control_srv(False)  # Deactivate the logger.
+    """Executes cleanup tasks when the node is shutting down."""
+
+    # Deactivate the logger to avoid serial buffer overflow.
+    logger_control_srv(False)
 
     print('\nShutting down...')
 
