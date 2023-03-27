@@ -10,10 +10,6 @@ import gopher_ros_clearcore.msg as ros_clearcore_msg
 import gopher_ros_clearcore.srv as ros_clearcore_srv
 
 
-def serial_write(command):
-    serial_write_srv(command)
-
-
 # Topic callback functions
 def velocity_callback(msg):  # Velocity movement
     global last_velocity
@@ -32,7 +28,7 @@ def velocity_callback(msg):  # Velocity movement
         last_velocity = velocity
 
         command = f'vm_{velocity}_'
-        serial_write(command)
+        serial_write_srv(command)
 
 
 def pos_callback(msg):  # Absolute position movement
@@ -45,14 +41,14 @@ def pos_callback(msg):  # Absolute position movement
         previous_time['position'] = current_time['position']
 
         command = f'am_{msg.position}_{msg.velocity}_'
-        serial_write(command)
+        serial_write_srv(command)
 
 
 # Service handlers
-# TODO: Add proper service responses based on messages from CLearCore.
+# TODO: Add proper service responses based on messages from ClearCore.
 def stop_handler(req):
     command = 'vm_0.0_'  # Send 0 velocity to stop any motion.
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = req.command
@@ -69,7 +65,7 @@ def drive_control_handler(req):  # Drive motor control
     elif not req.command:
         command = 'dd_'  # Disable
 
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = req.command
@@ -86,7 +82,7 @@ def brake_control_handler(req):  # Brake control
     elif not req.command:
         command = 'db_'  # Disable
 
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = req.command
@@ -103,7 +99,7 @@ def debug_control_handler(req):  # Debug mode control
     elif not req.command:
         command = 'debug_off_'
 
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = req.command
@@ -120,7 +116,7 @@ def logger_control_handler(req):  # Logger mode control
     elif not req.command:
         command = 'logger_off_'
 
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = req.command
@@ -135,7 +131,7 @@ def homing_handler(req):  # Homing
     if req.command:
         command = 'hm_'
 
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = req.command
@@ -145,7 +141,7 @@ def homing_handler(req):  # Homing
 
 def abspos_handler(req):  # Relative position movement
     command = f'am_{req.position}_{req.velocity}_'
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = True
@@ -155,7 +151,7 @@ def abspos_handler(req):  # Relative position movement
 
 def relpos_handler(req):  # Relative position movement
     command = f'rm_{req.position}_{req.velocity}_'
-    serial_write(command)
+    serial_write_srv(command)
 
     # Service response
     response = True
