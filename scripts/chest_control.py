@@ -13,7 +13,7 @@ import gopher_ros_clearcore.srv as ros_clearcore_srv
 # Topic callback functions
 def velocity_callback(msg):  # Velocity movement
     global last_velocity
-    command = ''
+    serial_command = ''
     # TODO: Shift from using Twist message, to a float32.
     velocity = msg.linear.z
 
@@ -27,12 +27,12 @@ def velocity_callback(msg):  # Velocity movement
         previous_time['velocity'] = current_time['velocity']
         last_velocity = velocity
 
-        command = f'vm_{velocity}_'
-        serial_write_srv(command)
+        serial_command = f'vm_{velocity}_'
+        serial_write_srv(serial_command)
 
 
 def pos_callback(msg):  # Absolute position movement
-    command = ''
+    serial_command = ''
 
     current_time['position'] = time.perf_counter()
 
@@ -40,15 +40,15 @@ def pos_callback(msg):  # Absolute position movement
     if current_time['position'] - previous_time['position'] > 0.1:
         previous_time['position'] = current_time['position']
 
-        command = f'am_{msg.position}_{msg.velocity}_'
-        serial_write_srv(command)
+        serial_command = f'am_{msg.position}_{msg.velocity}_'
+        serial_write_srv(serial_command)
 
 
 # Service handlers
 # TODO: Add proper service responses based on messages from ClearCore.
 def stop_handler(req):
-    command = 'vm_0.0_'  # Send 0 velocity to stop any motion.
-    serial_write_srv(command)
+    serial_command = 'vm_0.0_'  # Send 0 velocity to stop any motion.
+    serial_write_srv(serial_command)
 
     # Service response
     response = req.command
@@ -57,15 +57,15 @@ def stop_handler(req):
 
 
 def drive_control_handler(req):  # Drive motor control
-    command = ''
+    serial_command = ''
 
     if req.command:
-        command = 'ed_'  # Enable
+        serial_command = 'ed_'  # Enable
 
     elif not req.command:
-        command = 'dd_'  # Disable
+        serial_command = 'dd_'  # Disable
 
-    serial_write_srv(command)
+    serial_write_srv(serial_command)
 
     # Service response
     response = req.command
@@ -74,15 +74,15 @@ def drive_control_handler(req):  # Drive motor control
 
 
 def brake_control_handler(req):  # Brake control
-    command = ''
+    serial_command = ''
 
     if req.command:
-        command = 'eb_'  # Enable
+        serial_command = 'eb_'  # Enable
 
     elif not req.command:
-        command = 'db_'  # Disable
+        serial_command = 'db_'  # Disable
 
-    serial_write_srv(command)
+    serial_write_srv(serial_command)
 
     # Service response
     response = req.command
@@ -91,15 +91,15 @@ def brake_control_handler(req):  # Brake control
 
 
 def debug_control_handler(req):  # Debug mode control
-    command = ''
+    serial_command = ''
 
     if req.command:
-        command = 'debug_on_'
+        serial_command = 'debug_on_'
 
     elif not req.command:
-        command = 'debug_off_'
+        serial_command = 'debug_off_'
 
-    serial_write_srv(command)
+    serial_write_srv(serial_command)
 
     # Service response
     response = req.command
@@ -108,15 +108,15 @@ def debug_control_handler(req):  # Debug mode control
 
 
 def logger_control_handler(req):  # Logger mode control
-    command = ''
+    serial_command = ''
 
     if req.command:
-        command = 'logger_on_100_'  # Run logger at 10 Hz.
+        serial_command = 'logger_on_100_'  # Run logger at 10 Hz.
 
     elif not req.command:
-        command = 'logger_off_'
+        serial_command = 'logger_off_'
 
-    serial_write_srv(command)
+    serial_write_srv(serial_command)
 
     # Service response
     response = req.command
@@ -125,13 +125,13 @@ def logger_control_handler(req):  # Logger mode control
 
 
 def homing_handler(req):  # Homing
-    command = ''
+    serial_command = ''
 
     # Start homing
     if req.command:
-        command = 'hm_'
+        serial_command = 'hm_'
 
-    serial_write_srv(command)
+    serial_write_srv(serial_command)
 
     # Service response
     response = req.command
@@ -140,8 +140,8 @@ def homing_handler(req):  # Homing
 
 
 def abspos_handler(req):  # Relative position movement
-    command = f'am_{req.position}_{req.velocity}_'
-    serial_write_srv(command)
+    serial_command = f'am_{req.position}_{req.velocity}_'
+    serial_write_srv(serial_command)
 
     # Service response
     response = True
@@ -150,8 +150,8 @@ def abspos_handler(req):  # Relative position movement
 
 
 def relpos_handler(req):  # Relative position movement
-    command = f'rm_{req.position}_{req.velocity}_'
-    serial_write_srv(command)
+    serial_command = f'rm_{req.position}_{req.velocity}_'
+    serial_write_srv(serial_command)
 
     # Service response
     response = True
