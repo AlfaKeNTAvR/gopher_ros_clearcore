@@ -1,5 +1,25 @@
 #!/usr/bin/env python
-# TODO: Rewrite the code as a Class.
+# TODO: Rewrite the code as a Class and add a main() function.
+"""Publishes status information about a robot chest component.
+
+This module subscribes to a ROS topic 'logged_info', which publishes
+status information of a robot chest component in the form of a JSON
+string. The JSON string is deserialized to obtain velocity, position
+and status of the components of the chest, which are then published
+on various ROS topics as follows:
+
+'chest_position' topic publishes position of the chest.
+'chest_velocity' topic publishes velocity of the chest.
+'brake_status' topic publishes status of the chest brake.
+'motor_status' topic publishes status of the chest motor.
+'limits_status' topic publishes status of the chest limit switches.
+This module also initializes a ROS node 'chest_logger' and a ROS
+service client 'z_chest_logger' for controlling the logger.
+
+Author(s):
+    1. Yveder Joseph (ygjoseph@wpi.edu) 
+    2. Nikita Boguslavskii (bognik3@gmail.com)
+"""
 
 import rospy
 import json
@@ -15,6 +35,13 @@ from gopher_ros_clearcore.srv import LoggerControl
 
 # Logger callback function
 def logger_callback(msg):
+    """Callback function for the ROS logged_info topic subscriber.
+
+    This method is called every time a message is received on the 'logged_info' 
+    topic. It deserializes the message (which is a JSON string), and publishes 
+    the position, velocity, and status information of the chest on various ROS 
+    topics.
+    """
 
     if len(msg.data) > 0:
         # Serialze String to Json
