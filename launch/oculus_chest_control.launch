@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>=
+    <include file="$(find gopher_ros_clearcore)/launch/chest.launch"/>
+
+    <node pkg="gopher_ros_clearcore" type="oculus_chest_mapping.py" name="oculus_chest_mapping" output="screen"/>>
+</launch>
