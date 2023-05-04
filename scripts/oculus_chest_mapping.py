@@ -8,7 +8,7 @@ import numpy as np
 
 from geometry_msgs.msg import (Twist)
 
-from oculus.msg import (
+from oculus_ros.msg import (
     ControllerButtons,
     ControllerJoystick,
 )
