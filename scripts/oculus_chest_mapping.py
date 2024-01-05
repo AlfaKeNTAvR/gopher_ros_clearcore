@@ -69,12 +69,12 @@ class OculusChestMapping:
 
         # # Topic subscriber:
         rospy.Subscriber(
-            f'oculus/{self.CONTROLLER_SIDE}/joystick',
+            f'/{self.CONTROLLER_SIDE}/controller_feedback/joystick',
             ControllerJoystick,
             self.__oculus_joystick_callback,
         )
         rospy.Subscriber(
-            f'oculus/{self.CONTROLLER_SIDE}/buttons',
+            f'/{self.CONTROLLER_SIDE}/controller_feedback/buttons',
             ControllerButtons,
             self.__oculus_buttons_callback,
         )
@@ -160,7 +160,7 @@ def main():
     
     """
 
-    chest_mapping = OculusChestMapping(controller_side='right')
+    chest_mapping = OculusChestMapping()
 
     print('\nOculus-chest mapping is ready.\n')
 
