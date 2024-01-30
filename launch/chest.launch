@@ -1,8 +1,47 @@
 <?xml version="1.0"?>
 <launch>=
 
-    <node pkg="gopher_ros_clearcore" type="chest_serial.py" name="chest_serial" output="screen"/>
-    <node pkg="gopher_ros_clearcore" type="chest_control.py" name="chest_control" output="screen"/>
-    <node pkg="gopher_ros_clearcore" type="chest_logger.py" name="chest_logger" output="screen"/>
+    <!-- ============================ SETTINGS ============================= -->
 
+    <!-- Node frequency: the frequency [Hz] which rate.sleep() function will
+    attempt to maintain in the main_loop. -->
+    <arg 
+    name="node_frequency" 
+    default="100"/>
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+
+    <!-- Chest serial module: -->
+    <node 
+        pkg="gopher_ros_clearcore" 
+        type="chest_serial.py" 
+        name="chest_serial" 
+        output="screen">
+        <param 
+            name="node_frequency" 
+            value="$(arg node_frequency)"/>
+    </node>
+
+    <!-- Chest logger module: --> 
+    <node 
+        pkg="gopher_ros_clearcore" 
+        type="chest_logger.py" 
+        name="chest_logger" 
+        output="screen">
+        <param 
+            name="node_frequency" 
+            value="$(arg node_frequency)"/>
+    </node>
+    
+    <!-- Chest control module: --> 
+    <node 
+        pkg="gopher_ros_clearcore" 
+        type="chest_control.py" 
+        name="chest_control" 
+        output="screen">
+        <param 
+            name="node_frequency" 
+            value="$(arg node_frequency)"/>
+    </node>   
 </launch>

@@ -50,24 +50,12 @@ find_package(catkin REQUIRED COMPONENTS
 
 # Generate messages in the 'msg' folder
 add_message_files(
-  FILES
-  ConsoleInfo.msg
-  Position.msg
+  DIRECTORY msg
 )
 
 # Generate services in the 'srv' folder
 add_service_files(
-  FILES
-  Stop.srv
-  AbsolutePosition.srv
-  BrakeControl.srv
-  DebugControl.srv
-  LoggerControl.srv
-  DriveControl.srv
-  Homing.srv
-  RelativePosition.srv
-  UnityPrint.srv
-  SerialWrite.srv
+  DIRECTORY srv
 )
 
 ## Generate actions in the 'action' folder

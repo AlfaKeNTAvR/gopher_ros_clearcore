@@ -1,40 +1,46 @@
 #!/usr/bin/env python
 """
+A ROS node to communicate with Teknic ClearCore via serial connection.
 
-Author(s):
-    1. Nikita Boguslavskii (bognik3@gmail.com), Human-Inspired Robotics (HiRo)
+Author(s):  
+    1. Yveder Joseph (ygjoseph@wpi.edu), Worcester Polytechnic Institute (WPI),
+       2023.
+    2. Nikita Boguslavskii (bognik3@gmail.com), Human-Inspired Robotics (HiRo)
        lab, Worcester Polytechnic Institute (WPI), 2023.
-
 """
 
 # # Standart libraries:
 import rospy
-import numpy as np
+import serial
+import serial.tools.list_ports
 
 # # Third party libraries:
 
 # # Standart messages and services:
 from std_msgs.msg import (
     Bool,
-    Float32,
-)
-from std_srvs.srv import (
-    Empty,
+    String,
 )
 
 # # Third party messages and services:
-from oculus_ros.msg import (ControllerJoystick)
+from gopher_ros_clearcore.srv import (SerialWrite)
 
 
-class OculusChestMapping:
-    """
-    
+class ChestSerial:
+    """Provides an interface to communicate via serial connection.
+
+    Attributes:
+        logger_info (rospy.Publisher): A ROS publisher to publish logger data
+            received from Teknic ClearCore controller.
+        serial_write (rospy.Service): A ROS service to write data to Teknic 
+            ClearCore controller via serial port.
+        serial_port (serial.Serial): The serial port instance used to
+            communicate with Teknic ClearCore.
     """
 
     def __init__(
         self,
         node_name,
-        controller_side,
     ):
         """
         
@@ -43,14 +49,12 @@ class OculusChestMapping:
         # # Private CONSTANTS:
         # NOTE: By default all new class CONSTANTS should be private.
         self.__NODE_NAME = node_name
-        self.__CONTROLLER_SIDE = controller_side
 
         # # Public CONSTANTS:
 
         # # Private variables:
         # NOTE: By default all new class variables should be private.
-        self.__oculus_joystick = ControllerJoystick()
-        self.__joystick_button_state = 0
+        self.__serial_port = None
 
         # # Public variables:
 
@@ -66,88 +70,73 @@ class OculusChestMapping:
 
         # NOTE: Specify dependency initial False initial status.
         self.__dependency_status = {
-            'chest_control': False,
+            # 'dependency_node_name': False,
         }
 
         # NOTE: Specify dependency is_initialized topic (or any other topic,
         # which will be available when the dependency node is running properly).
         self.__dependency_status_topics = {}
 
-        self.__dependency_status_topics['chest_control'] = (
-            rospy.Subscriber(
-                f'/chest_control/is_initialized',
-                Bool,
-                self.__chest_control_callback,
-            )
-        )
+        # self.__dependency_status_topics['<dependency_node_name>'] = (
+        #     rospy.Subscriber(
+        #         f'/<dependency_node_name>/is_initialized',
+        #         Bool,
+        #         self.__dependency_name_callback,
+        #     )
+        # )
 
         # # Service provider:
+        rospy.Service(
+            f'{self.__NODE_NAME}/serial_write',
+            SerialWrite,
+            self.__serial_write_handler,
+        )
 
         # # Service subscriber:
-        self.__chest_home = rospy.ServiceProxy(
-            '/chest_control/home',
-            Empty,
-        )
-        self.__chest_stop = rospy.ServiceProxy(
-            '/chest_control/stop',
-            Empty,
-        )
 
         # # Topic publisher:
-        self.__chest_velocity = rospy.Publisher(
-            '/chest_control/velocity_fraction',
-            Float32,
+        self.__logger_info = rospy.Publisher(
+            '/chest_logger/logger_info',
+            String,
             queue_size=1,
         )
 
         # # Topic subscriber:
-        rospy.Subscriber(
-            f'/{self.__CONTROLLER_SIDE}/controller_feedback/joystick',
-            ControllerJoystick,
-            self.__oculus_joystick_callback,
-        )
 
         # # Timers:
-        # rospy.Timer(
-        #     rospy.Duration(1.0 / 100),
-        #     self.__some_function_timer,
-        # )
 
     # # Dependency status callbacks:
     # NOTE: each dependency topic should have a callback function, which will
     # set __dependency_status variable.
-    def __chest_control_callback(self, message):
-        """Monitors /chest_control/is_initialized topic.
-        
-        """
+    # def __dependency_name_callback(self, message):
+    #     """Monitors <node_name>/is_initialized topic.
 
-        self.__dependency_status['chest_control'] = message.data
+    #     """
+
+    #     self.__dependency_status['dependency_node_name'] = message.data
 
     # # Service handlers:
-    # def __service_name1_handler(self, request):
-    #     """
+    def __serial_write_handler(self, request):
+        """Handles serial write ROS service requests.
 
-    #     """
+        Args:
+            req (SerialWriteRequest): The request object containing the command 
+            to be written to the serial port.
 
-    #     response = True
+        Returns:
+            bool: A boolean value indicating whether the request was successful.
+        """
 
-    #     return response
+        self.__serial_write(request.command)
+
+        # TODO: Service response
+        response = True
+
+        return response
 
     # # Topic callbacks:
-    def __oculus_joystick_callback(self, message):
-        """
-
-        """
-
-        self.__oculus_joystick = message
 
     # # Timer callbacks:
-    # def __some_function_timer(self, event):
-    #     """Calls <some_function> on each timer callback with 100 Hz frequency.
-
-    #     """
-
-    #     self.__some_function()
 
     # # Private methods:
     # NOTE: By default all new class methods should be private.
@@ -202,7 +191,7 @@ class OculusChestMapping:
             )
 
         # NOTE (optionally): Add more initialization criterea if needed.
-        if (self.__dependency_initialized):
+        if (self.__dependency_initialized and self.__serial_port):
             if not self.__is_initialized:
                 rospy.loginfo(f'\033[92m{self.__NODE_NAME}: ready.\033[0m',)
 
@@ -213,48 +202,70 @@ class OculusChestMapping:
                 # NOTE (optionally): Add code, which needs to be executed if the
                 # nodes's status changes from True to False.
 
-                pass
+                # Deactivate the logger.
+                self.__serial_write('logger_off_')
+
+                # Stop any chest motion.
+                self.__serial_write('vm_0.0_')
 
             self.__is_initialized = False
 
         self.__node_is_initialized.publish(self.__is_initialized)
 
-    def __map_chest(self):
+    def __serial_setup(
+        self,
+        device_name='Teknic ClearCore',
+        baudrate=115200,
+        timeout=0.1,
+    ):
+        """Sets up the serial port.
+
+        Args:
+            device_name (str): The name of the device to connect to.
+            baudrate (int): The baudrate to use for the serial connection.
+            timeout (float): The timeout for the serial connection.
         """
+
+        ports = list(serial.tools.list_ports.comports())
+
+        port = ''
+
+        # Finds a port name for the Teknic ClearCore.
+        for p in ports:
+            if (device_name in p):
+                port = str(p).split('-')[0].strip()
+
+        self.__serial_port = serial.Serial(
+            port,
+            baudrate,
+            timeout=timeout,
+        )
+
+    def __serial_write(self, data):
+        """Writes data to the serial port.
+
+        Args:
+            data (str): The data to be written to the serial port.
+        """
+
+        self.__serial_port.write(data.encode())
+
+    def __serial_read(self):
+        """Reads data from the serial port. 
         
+        Publishes logger data to the logged_info topic.
         """
 
-        chest_velolicity = 0.0
+        data = self.__serial_port.readline().decode()
 
-        if abs(self.__oculus_joystick.position_y) > 0.05:  # Noisy joystick.
-            chest_velolicity = np.interp(
-                round(self.__oculus_joystick.position_y, 4),
-                [-1.0, 1.0],
-                [-0.8, 0.8],
-            )
+        if len(data) > 0:  # If any serial data available.
 
-        velocity_message = Float32()
-        velocity_message.data = chest_velolicity
-        self.__chest_velocity.publish(velocity_message)
+            data = data.split('_')
+            command = data[0]
 
-    def __joystick_button_state_machine(self):
-        """
-        
-        """
-
-        # State 0: Joystick button was pressed. Homing is activated.
-        if (
-            self.__oculus_joystick.button and self.__joystick_button_state == 0
-        ):
-            self.__chest_home()
-            self.__joystick_button_state = 1
-
-        # State 1: Joystick button was released.
-        elif (
-            not self.__oculus_joystick.button
-            and self.__joystick_button_state == 1
-        ):
-            self.__joystick_button_state = 0
+            # Publish logger data
+            if command == 'logger':
+                self.__logger_info.publish(data[1])
 
     # # Public methods:
     # NOTE: By default all new class methods should be private.
@@ -263,6 +274,9 @@ class OculusChestMapping:
         
         """
 
+        if not self.__serial_port:
+            self.__serial_setup()
+
         self.__check_initialization()
 
         if not self.__is_initialized:
@@ -270,8 +284,8 @@ class OculusChestMapping:
 
         # NOTE: Add code (function calls), which has to be executed once the
         # node was successfully initialized.
-        self.__joystick_button_state_machine()
-        self.__map_chest()
+
+        self.__serial_read()
 
     def node_shutdown(self):
         """
@@ -284,9 +298,11 @@ class OculusChestMapping:
         # Publishing to topics is not guaranteed, use service calls or
         # set parameters instead.
 
-        # NOTE: Placing a service call inside of a try-except block here causes
-        # the node to stuck.
-        self.__chest_stop()
+        # Deactivate the logger.
+        self.__serial_write('logger_off_')
+
+        # Stop any chest motion.
+        self.__serial_write('vm_0.0_')
 
         rospy.loginfo_once(f'{self.__NODE_NAME}: node has shut down.',)
 
@@ -299,7 +315,7 @@ def main():
     # # Default node initialization.
     # This name is replaced when a launch file is used.
     rospy.init_node(
-        'oculus_chest_mapping',
+        'chest_serial',
         log_level=rospy.INFO,  # rospy.DEBUG to view debug messages.
     )
 
@@ -313,15 +329,7 @@ def main():
         default=100,
     )
 
-    controller_side = rospy.get_param(
-        param_name=f'{node_name}/controller_side',
-        default='right',
-    )
-
-    class_instance = OculusChestMapping(
-        node_name=node_name,
-        controller_side=controller_side,
-    )
+    class_instance = ChestSerial(node_name=node_name,)
 
     rospy.on_shutdown(class_instance.node_shutdown)
     node_rate = rospy.Rate(node_frequency)

@@ -1,2 +1,2 @@
-float64 position
-float64 velocity
+float32 position
+float32 speed_fraction
