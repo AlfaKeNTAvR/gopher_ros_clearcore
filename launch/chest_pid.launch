@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<launch>=
+
+    <!-- ============================ SETTINGS ============================= -->
+
+    <!-- Node frequency: the frequency [Hz] which rate.sleep() function will
+    attempt to maintain in the main_loop. -->
+    <arg 
+    name="node_frequency" 
+    default="100"/>
+
+    <!-- Max speed fraction: should be within [0.1, 1.0]. -->
+    <arg 
+    name="max_speed_fraction" 
+    default="1.0"/>
+
+    <!-- Cutoff speed fraction: speed fraction value below which the speed is
+    considered 0. -->
+    <arg 
+    name="cutoff_speed_fraction" 
+    default="0.001"/>
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- PID controller: -->
+    <node 
+    pkg="pid" 
+    type="controller" 
+    name="controller" 
+    ns="/chest_pid" 
+    output="log">
+        <param
+        name="Kp"
+        value="10.0"/>
+        <param 
+        name="Ki"
+        value="0.0"/>
+        <param 
+        name="Kd"
+        value="0.0"/>
+        <param 
+        name="upper_limit"
+        value="100.0"/>
+        <param 
+        name="lower_limit"
+        value="-100.0"/>
+        <param
+        name="min_loop_frequency"
+        value="10.0"/>
+        <param 
+        name="max_loop_frequency"
+        value="10.0"/>  
+    </node>
+
+    <!-- Chest PID module: -->
+    <node 
+    pkg="gopher_ros_clearcore" 
+    type="chest_pid.py" 
+    name="chest_pid"
+    output="screen">
+        <param 
+        name="node_frequency" 
+        value="$(arg node_frequency)"/>
+        <param 
+        name="max_speed_fraction" 
+        value="$(arg max_speed_fraction)"/>
+        <param 
+        name="cutoff_speed_fraction" 
+        value="$(arg cutoff_speed_fraction)"/>   
+    </node>
+</launch>
