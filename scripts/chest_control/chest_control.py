@@ -235,7 +235,7 @@ class ChestControl:
         if not self.__is_initialized:
             return
 
-        serial_command = f'am_{request.position}_{request.speed_fraction}_'
+        serial_command = f'am_{request.position * 1000}_{request.speed_fraction}_'
         self.__serial_write(serial_command)
 
         # Service response.
@@ -255,7 +255,7 @@ class ChestControl:
         if not self.__is_initialized:
             return
 
-        serial_command = f'rm_{request.position}_{request.speed_fraction}_'
+        serial_command = f'rm_{request.position * 1000}_{request.speed_fraction}_'
         self.__serial_write(serial_command)
 
         # Service response.
@@ -417,7 +417,7 @@ class ChestControl:
         ):
             self.__previous_time['position'] = self.__current_time['position']
 
-            serial_command = f'am_{message.position}_{message.speed}_'
+            serial_command = f'am_{message.position * 1000}_{message.speed_fraction}_'
             self.__serial_write(serial_command)
 
     def __is_homed_callback(self, message):

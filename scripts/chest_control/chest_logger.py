@@ -160,12 +160,12 @@ class ChestLogger:
 
                 # Object for publishing velocity.
                 velocity = Float32()
-                velocity.data = float(status['Motor']['CurrentVelocity'])
+                velocity.data = float(status['Motor']['CurrentVelocity']) / 100
                 self.__current_velocity.publish(velocity)
 
                 # Object for publishing position.
                 position = Float32()
-                position.data = float(status['Motor']['CurrentPosition'])
+                position.data = float(status['Motor']['CurrentPosition']) / 1000
                 self.__current_position.publish(position)
 
                 # Object for publishing homing status:
