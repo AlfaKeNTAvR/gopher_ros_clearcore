@@ -21,10 +21,13 @@ from std_msgs.msg import (
     Float32,
 )
 from geometry_msgs.msg import (Pose)
-from std_srvs.srv import (Empty)
+from std_srvs.srv import (
+    Empty,
+    SetBool,
+)
 
 # # Third party messages and services:
-from oculus_ros.msg import (ControllerButtons)
+# from oculus_ros.msg import (ControllerButtons)
 
 
 class OculusPoseMapping:
@@ -54,8 +57,8 @@ class OculusPoseMapping:
         self.__input_z = None
         self.__input_chest_z_difference = None
 
-        self.__tracking_button = False
-        self.__tracking_state_machine_state = 0
+        # self.__tracking_button = False
+        # self.__tracking_state_machine_state = 0
 
         self.__input_tracking = False
 
@@ -96,6 +99,13 @@ class OculusPoseMapping:
             )
         )
 
+        # # Service provider:
+        rospy.Service(
+            f'/{self.__NODE_NAME}/enable_tracking',
+            SetBool,
+            self.__enable_tracking_handler,
+        )
+
         # # Service subscriber:
         self.__chest_stop = rospy.ServiceProxy(
             '/chest_control/stop',
@@ -120,11 +130,11 @@ class OculusPoseMapping:
             Pose,
             self.__oculus_pose_callback,
         )
-        rospy.Subscriber(
-            f'/{self.__CONTROLLER_SIDE}/controller_feedback/buttons',
-            ControllerButtons,
-            self.__oculus_buttons_callback,
-        )
+        # rospy.Subscriber(
+        #     f'/{self.__CONTROLLER_SIDE}/controller_feedback/buttons',
+        #     ControllerButtons,
+        #     self.__oculus_buttons_callback,
+        # )
 
         # # Timers:
 
@@ -146,6 +156,34 @@ class OculusPoseMapping:
         self.__dependency_status['controller_feedback'] = message.data
 
     # # Service handlers:
+    def __enable_tracking_handler(self, request):
+        """
+        
+        """
+
+        message = ''
+        success = False
+
+        if not self.__is_initialized:
+            return success, message
+
+        if request.data:
+
+            self.__input_chest_z_difference = (self.__input_z - self.__chest_z)
+            self.__input_tracking = True
+            # self.__tracking_state_machine_state = 0
+
+            message = 'input_tracking was enabled.'
+            success = True
+
+        elif not request.data:
+            self.__input_tracking = False
+            # self.__tracking_state_machine_state = 0
+
+            message = 'input_tracking was disabled.'
+            success = True
+
+        return success, message
 
     # # Topic callbacks:
     def __chest_current_position_callback(self, message):
@@ -162,12 +200,12 @@ class OculusPoseMapping:
 
         self.__input_z = message.position.z
 
-    def __oculus_buttons_callback(self, message: ControllerButtons):
-        """
+    # def __oculus_buttons_callback(self, message: ControllerButtons):
+    #     """
 
-        """
+    #     """
 
-        self.__tracking_button = message.grip_button
+    #     self.__tracking_button = message.grip_button
 
     # # Timer callbacks:
 
@@ -242,34 +280,34 @@ class OculusPoseMapping:
 
         self.__node_is_initialized.publish(self.__is_initialized)
 
-    def __tracking_state_machine(self, button):
-        """
-        
-        """
+    # def __tracking_state_machine(self, button):
+    #     """
 
-        # State 0: Grip button was pressed.
-        if (self.__tracking_state_machine_state == 0 and button):
+    #     """
 
-            self.__tracking_state_machine_state = 1
+    #     # State 0: Grip button was pressed.
+    #     if (self.__tracking_state_machine_state == 0 and button):
 
-        # State 1: Grip button was released. Tracking is activated.
-        elif (self.__tracking_state_machine_state == 1 and not button):
+    #         self.__tracking_state_machine_state = 1
 
-            self.__tracking_state_machine_state = 2
+    #     # State 1: Grip button was released. Tracking is activated.
+    #     elif (self.__tracking_state_machine_state == 1 and not button):
 
-            self.__input_chest_z_difference = (self.__input_z - self.__chest_z)
-            self.__input_tracking = True
+    #         self.__tracking_state_machine_state = 2
 
-        # State 2: Grip button was pressed. Tracking is deactivated.
-        elif (self.__tracking_state_machine_state == 2 and button):
+    #         self.__input_chest_z_difference = (self.__input_z - self.__chest_z)
+    #         self.__input_tracking = True
 
-            self.__tracking_state_machine_state = 3
-            self.__input_tracking = False
+    #     # State 2: Grip button was pressed. Tracking is deactivated.
+    #     elif (self.__tracking_state_machine_state == 2 and button):
 
-        # State 3: Grip button was released.
-        elif (self.__tracking_state_machine_state == 3 and not button):
+    #         self.__tracking_state_machine_state = 3
+    #         self.__input_tracking = False
 
-            self.__tracking_state_machine_state = 0
+    #     # State 3: Grip button was released.
+    #     elif (self.__tracking_state_machine_state == 3 and not button):
+
+    #         self.__tracking_state_machine_state = 0
 
     def __publish_chest_position(self):
         """
@@ -317,7 +355,7 @@ class OculusPoseMapping:
         # NOTE: Add code (function calls), which has to be executed once the
         # node was successfully initialized.
 
-        self.__tracking_state_machine(self.__tracking_button)
+        # self.__tracking_state_machine(self.__tracking_button)
 
         if self.__input_tracking:
             self.__publish_chest_position()
