@@ -26,6 +26,7 @@ from std_srvs.srv import (
 )
 
 # # Third party messages and services:
+from kortex_driver.msg import (JointAngles)
 
 
 class ChestPID:
@@ -128,6 +129,11 @@ class ChestPID:
             Float32,
             self.__goal_position_callback,
         )
+        rospy.Subscriber(
+            f'/my_gen3/relaxed_ik/joint_angle_solutions',
+            JointAngles,
+            self.__absolute_setpoint_callback,
+        )
 
         rospy.Subscriber(
             f'{self.__NODE_NAME}/control_effort',
@@ -184,6 +190,18 @@ class ChestPID:
         """
 
         self.__goal_position = np.clip(message.data, 0, 0.44)
+
+    def __absolute_setpoint_callback(self, message):
+        """
+
+        """
+
+        if len(message.joint_angles) > 7:
+            self.__goal_position = np.clip(
+                message.joint_angles[7].value,
+                0,
+                0.44,
+            )
 
     def __control_effort_callback(self, message):
         """

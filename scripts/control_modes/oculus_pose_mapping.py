@@ -155,6 +155,13 @@ class OculusPoseMapping:
 
         self.__dependency_status['controller_feedback'] = message.data
 
+    def __teleoperation_callback(self, message):
+        """Monitors /teleoperation/is_initialized topic.
+        
+        """
+
+        self.__dependency_status['teleoperation'] = message.data
+
     # # Service handlers:
     def __enable_tracking_handler(self, request):
         """
