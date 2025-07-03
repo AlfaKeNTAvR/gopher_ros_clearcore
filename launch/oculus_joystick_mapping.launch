@@ -25,7 +25,7 @@
     chest stays at current position. -->
     <arg 
     name="start_position" 
-    value="0.22"/>
+    value="-1"/>
 
 
     <!-- If any of dependency or optional subfiles should not be launched (or
