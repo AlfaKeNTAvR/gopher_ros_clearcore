@@ -54,4 +54,61 @@
         name="start_position" 
         value="$(arg start_position)"/>
     </node>   
+
+    <!-- Static frames broadcasters: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="stand_link_broadcaster" 
+    args="0 0 0.36 0 0 0 1 base_link stand_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_chest_mount_broadcaster" 
+    args="0 -0.144 -0.038 0.3827 0 0 0.9239 chest_link right_arm/chest_mount"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_chest_mount_broadcaster" 
+    args="0 0.144 -0.038 -0.3827 0 0 0.9239 chest_link left_arm/chest_mount"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_arm_mount_broadcaster" 
+    args="0 0 0 0 0 -0.7071 0.7071 right_arm/chest_mount right_arm/base_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_arm_mount_broadcaster" 
+    args="0 0 0 0 0 0.7071 0.7071 left_arm/chest_mount left_arm/base_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="active_neck_broadcaster" 
+    args="0 0 0 0 0 0 1 chest_link active_neck_link"
+    />
+
+    <!-- <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_chest_mount_broadcaster" 
+    args="0 -0.144 -0.038 0.27057566 -0.27036028 -0.65307515  0.65359542]) chest_link right_arm/base_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_chest_mount_broadcaster" 
+    args="0 0.144 -0.038 -0.3827 0 0 0.9239 chest_link left_arm/base_link"
+    /> -->
 </launch>
