@@ -77,6 +77,11 @@ class ChestControl:
 
         self.__enable_chest_motion = True
 
+        self.__arm_fault_state = {
+            'right_arm': False,
+            'left_arm': False,
+        }
+
         # # Public variables:
 
         # # Initialization and dependency status topics:
@@ -193,6 +198,17 @@ class ChestControl:
             self.__chest_current_position_callback,
         )
 
+        rospy.Subscriber(
+            '/right_arm/fault_state',
+            Bool,
+            self.__right_arm_fault_callback,
+        )
+        rospy.Subscriber(
+            '/left_arm/fault_state',
+            Bool,
+            self.__left_arm_fault_callback,
+        )
+
         # # Timers:
 
         # # TF broadcaster:
@@ -226,6 +242,20 @@ class ChestControl:
         """
 
         self.__dependency_status['chest_logger'] = message.data
+
+    def __right_arm_fault_callback(self, message):
+        """Monitors /right_arm/fault_state topic.
+
+        """
+
+        self.__arm_fault_state['right_arm'] = message.data
+
+    def __left_arm_fault_callback(self, message):
+        """Monitors /left_arm/fault_state topic.
+
+        """
+
+        self.__arm_fault_state['left_arm'] = message.data
 
     # # Service handlers:
     def __stop_handler(self, request):
@@ -470,8 +500,8 @@ class ChestControl:
 
         # Rate 10 Hz:
         if (
-            self.__current_time['position'] - self.__previous_time['position'] >
-            0.1
+            self.__current_time['position'] - self.__previous_time['position']
+            > 0.1
         ):
             self.__previous_time['position'] = self.__current_time['position']
 
@@ -550,6 +580,8 @@ class ChestControl:
         if (
             self.__dependency_initialized and self.__chest_is_homed
             and self.__chest_at_start_position
+            and not self.__arm_fault_state['right_arm']
+            and not self.__arm_fault_state['left_arm']
         ):
             if not self.__is_initialized:
                 rospy.loginfo(
@@ -565,7 +597,8 @@ class ChestControl:
                 # NOTE (optionally): Add code, which needs to be executed if the
                 # nodes's status changes from True to False.
 
-                pass
+                # Stop any chest motion.
+                self.__serial_write('vm_0.0_')
 
             self.__is_initialized = False
 
