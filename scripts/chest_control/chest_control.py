@@ -215,12 +215,6 @@ class ChestControl:
         self.__stand_link_to_chest_link_broadcaster = (
             tf2_ros.StaticTransformBroadcaster()
         )
-        self.__chest_link_to_right_arm_mount_broadcaster = (
-            tf2_ros.StaticTransformBroadcaster()
-        )
-        self.__chest_link_to_left_arm_mount_broadcaster = (
-            tf2_ros.StaticTransformBroadcaster()
-        )
 
         # # TF listener:
         self.__tf_buffer = tf2_ros.Buffer(rospy.Duration(1))
@@ -653,12 +647,12 @@ class ChestControl:
         transform_stamped = TransformStamped()
         transform_stamped.header.stamp = (rospy.Time.now())
         transform_stamped.header.frame_id = '/stand_link'
-        transform_stamped.child_frame_id = '/chest_link'
+        transform_stamped.child_frame_id = '/torso_bottom_plate'
 
         transform_stamped.transform.translation.x = 0
         transform_stamped.transform.translation.y = 0
         transform_stamped.transform.translation.z = (
-            0.5775 + self.__current_chest_position
+            0.44 + self.__current_chest_position
         )
 
         transform_stamped.transform.rotation.w = 1
