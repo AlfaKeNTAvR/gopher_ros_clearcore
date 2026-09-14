@@ -215,6 +215,7 @@ class ChestControl:
         self.__stand_link_to_chest_link_broadcaster = (
             tf2_ros.StaticTransformBroadcaster()
         )
+        self.__last_broadcast_chest_position = None
 
         # # TF listener:
         self.__tf_buffer = tf2_ros.Buffer(rospy.Duration(1))
@@ -643,6 +644,13 @@ class ChestControl:
         """
         
         """
+
+        # Static transforms are latched, so resend only when the chest moves.
+        # Resending every loop flooded /tf_static for all TF listeners.
+        if self.__current_chest_position == self.__last_broadcast_chest_position:
+            return
+
+        self.__last_broadcast_chest_position = self.__current_chest_position
 
         transform_stamped = TransformStamped()
         transform_stamped.header.stamp = (rospy.Time.now())
