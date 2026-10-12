@@ -111,4 +111,32 @@
     name="left_chest_mount_broadcaster" 
     args="0 0.144 -0.038 -0.3827 0 0 0.9239 chest_link left_arm/base_link"
     /> -->
+
+    <!-- <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="chest_camera_link_broadcaster" 
+    args="0 0 0 0 -0.7071 0 0.7071 chest_link chest_camera_link"
+    /> -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="chest_camera_link_broadcaster" 
+    args="0 0.04 -0.09282 -0.5 0.5 -0.5 0.5 chest_link chest_camera_link" 
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="nav_camera_link_broadcaster" 
+    args="-0.05 0.04 0.26 0 0 0 1 stand_link nav_camera_link" 
+    />
+
+    <node pkg="tf2_ros"
+    type="static_transform_publisher"
+    name="realsense_mount"
+    args="0 0 0 0 0 0 1 nav_camera_link camera_link"
+    />
+
+    
 </launch>
