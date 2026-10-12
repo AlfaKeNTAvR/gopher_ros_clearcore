@@ -1,78 +1,89 @@
 <?xml version="1.0"?>
-<launch>=
-
+<launch>
     <!-- ============================ SETTINGS ============================= -->
 
     <!-- Node frequency: the frequency [Hz] which rate.sleep() function will
     attempt to maintain in the main_loop. -->
-    <arg 
-    name="node_frequency" 
+    <arg
+    name="node_frequency"
     default="100"/>
 
     <!-- Controller side: can be either "right" or "left". -->
-    <arg 
-    name="controller_side" 
-    default="right"/>
+    <arg
+    name="controller_side"
+    default="left"/>
 
     <!-- Max speed fraction: maximum chest motion speed (0.01 - 1.0), which
     represents the fraction of the maximum chest speed. -->
-    <arg 
-    name="max_speed_fraction" 
+    <arg
+    name="max_speed_fraction"
     default="1.0"/>
 
     <!-- Start position (chest): move chest to starting position
     [meters]: [0.0 - 0.44]. If set to -1, no starting position is set and the
     chest stays at current position. -->
-    <arg 
-    name="start_position" 
+    <arg
+    name="start_position"
     value="-1"/>
-
 
     <!-- If any of dependency or optional subfiles should not be launched (or
     are launched separately) set corresponding argument to "false". -->
-    <arg 
-    name="launch_chest" 
+    <arg
+    name="launch_chest"
     default="true"/>
-    <arg 
-    name="launch_controller_feedback" 
+    <arg
+    name="launch_controller_feedback"
+    default="true"/>
+
+    <!-- launch_mapping_node: set to "false" when mapping_player.py is
+    handling chest control via a .mapping.json file (e.g. when launched
+    from controls.launch).  Set to "true" for standalone testing of this
+    launch file without mapping_player. -->
+    <arg
+    name="launch_mapping_node"
     default="true"/>
 
     <!-- ======================== END OF SETTINGS ========================== -->
 
-    <!-- Chest modules (dependency): -->
+    <!-- Chest modules (hardware driver): -->
     <group if="$(arg launch_chest)">
-        <include 
+        <include
         file="$(find gopher_ros_clearcore)/launch/chest.launch">
-            <arg 
-            name="start_position" 
+            <arg
+            name="start_position"
             value="$(arg start_position)"/>
         </include>
     </group>
 
     <!-- Oculus controller feedback (dependency): -->
     <group if="$(arg launch_controller_feedback)">
-        <include 
+        <include
         file="$(find oculus_ros)/launch/controller_feedback.launch">
-            <arg 
-            name="controller_side" 
+            <arg
+            name="controller_side"
             value="$(arg controller_side)"/>
         </include>
     </group>
 
-    <!-- Oculus mapping: -->
-    <node 
-    pkg="gopher_ros_clearcore" 
-    type="oculus_joystick_mapping.py" 
-    name="chest_oculus_joystick_mapping" 
-    output="screen">
-        <param 
-        name="node_frequency" 
-        value="$(arg node_frequency)"/>
-        <param 
-        name="controller_side" 
-        value="$(arg controller_side)"/>
-        <param 
-        name="max_speed_fraction" 
-        value="$(arg max_speed_fraction)"/>
-    </node>
+    <!-- Oculus mapping node (standalone only).
+         Disabled when launch_mapping_node is false — use mapping_player.py
+         with the appropriate .mapping.json instead to avoid conflicts. -->
+    <group if="$(arg launch_mapping_node)">
+        <node
+        pkg="gopher_ros_clearcore"
+        type="oculus_joystick_mapping.py"
+        name="chest_oculus_joystick_mapping"
+        output="screen">
+            <param
+            name="node_frequency"
+            value="$(arg node_frequency)"/>
+            <param
+            name="controller_side"
+            value="$(arg controller_side)"/>
+            <param
+            name="max_speed_fraction"
+            value="$(arg max_speed_fraction)"/>
+        </node>
+    </group>
+
 </launch>

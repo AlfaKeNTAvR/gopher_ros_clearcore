@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<launch>=
+
+    <!-- ============================ SETTINGS ============================= -->
+
+    <!-- Node frequency: the frequency [Hz] which rate.sleep() function will
+    attempt to maintain in the main_loop. -->
+    <arg 
+    name="node_frequency" 
+    default="100"/>
+
+    <!-- Start position: move chest to starting position [meters]: [0.0 - 0.44].
+    If set to -1, no starting position is set and the chest stays at current
+    position. -->
+    <arg 
+    name="start_position" 
+    default="-1"/>
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+
+    <!-- Chest serial module: -->
+    <node 
+    pkg="gopher_ros_clearcore" 
+    type="chest_serial.py" 
+    name="chest_serial" 
+    output="screen">
+        <param 
+        name="node_frequency" 
+        value="$(arg node_frequency)"/>
+    </node>
+
+    <!-- Chest logger module: --> 
+    <node 
+    pkg="gopher_ros_clearcore" 
+    type="chest_logger.py" 
+    name="chest_logger" 
+    output="screen">
+        <param 
+        name="node_frequency" 
+        value="$(arg node_frequency)"/>
+    </node>
+    
+    <!-- Chest control module: --> 
+    <node 
+    pkg="gopher_ros_clearcore" 
+    type="chest_control.py" 
+    name="chest_control" 
+    output="screen">
+        <param 
+        name="node_frequency" 
+        value="$(arg node_frequency)"/>
+        <param 
+        name="start_position" 
+        value="$(arg start_position)"/>
+    </node>   
+
+    <!-- Static frames broadcasters: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="stand_link_broadcaster" 
+    args="0 0 0.36 0 0 0 1 base_link stand_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_chest_mount_broadcaster" 
+    args="0 -0.144 -0.038 0.3827 0 0 0.9239 chest_link right_arm/chest_mount"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_chest_mount_broadcaster" 
+    args="0 0.144 -0.038 -0.3827 0 0 0.9239 chest_link left_arm/chest_mount"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_arm_mount_broadcaster" 
+    args="0 0 0 0 0 -0.7071 0.7071 right_arm/chest_mount right_arm/base_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_arm_mount_broadcaster" 
+    args="0 0 0 0 0 0.7071 0.7071 left_arm/chest_mount left_arm/base_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="active_neck_broadcaster" 
+    args="0 0 0 0 0 0 1 chest_link active_neck_link"
+    />
+
+    <!-- <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_chest_mount_broadcaster" 
+    args="0 -0.144 -0.038 0.27057566 -0.27036028 -0.65307515  0.65359542]) chest_link right_arm/base_link"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_chest_mount_broadcaster" 
+    args="0 0.144 -0.038 -0.3827 0 0 0.9239 chest_link left_arm/base_link"
+    /> -->
+
+    <!-- <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="chest_camera_link_broadcaster" 
+    args="0 0 0 0 -0.7071 0 0.7071 chest_link chest_camera_link"
+    /> -->
+    <!-- the current link is actually showign the camera optical link, instead we need the camera body frame link, and the rest frame will be taken care by the realsense drive by allowing publish_tf param to true -->	    
+    <!-- node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="chest_camera_link_broadcaster" 
+    args="0 0.04 -0.09282 -0.5 0.5 -0.5 0.5 chest_link chest_camera_link" 
+    / -->
+     <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="chest_camera_link_broadcaster" 
+    args="0 0.04 -0.09282 0 0 0 1 chest_link chest_camera_link" 
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="nav_camera_link_broadcaster" 
+    args="-0.05 0.04 0.26 0 0 0 1 stand_link nav_camera_link" 
+    />
+
+    <node pkg="tf2_ros"
+    type="static_transform_publisher"
+    name="realsense_mount"
+    args="0 0 0 0 0 0 1 nav_camera_link camera_link"
+    />
+
+    
+</launch>
